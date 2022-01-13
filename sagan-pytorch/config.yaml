@@ -1,0 +1,11 @@
+
+user:
+  mrzhu:
+    server_path: /home/mrzhu/data/
+  student:
+    # server_path: /mnt/sdb2/.RECYCLE.BIN/data/
+    server_path: /mnt/sdb1/student/mrzhu/data/
+
+
+# dataset: Butte/
+dataset: sagan-pytorch/data/
