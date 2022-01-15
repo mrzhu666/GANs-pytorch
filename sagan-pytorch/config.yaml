@@ -2,10 +2,13 @@
 user:
   mrzhu:
     server_path: /home/mrzhu/data/
+    dataset: /home/mrzhu/data/CRC-HE/NCT-CRC-HE-100K/
   student:
     # server_path: /mnt/sdb2/.RECYCLE.BIN/data/
     server_path: /mnt/sdb1/student/mrzhu/data/
+    dataset: /home/student/mrzhu/data/CRC-HE/train/
+    save: /home/student/mrzhu/data/CRC-HE-GAN/  # 数据生成保存文件夹,/train
 
 
-# dataset: Butte/
-dataset: sagan-pytorch/data/
+
+sample_num: 5

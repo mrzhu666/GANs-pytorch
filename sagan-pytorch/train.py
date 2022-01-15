@@ -18,7 +18,7 @@ parser = argparse.ArgumentParser(description='Self-Attention GAN trainer')
 parser.add_argument('--batch', default=4, type=int, help='batch size')   # 8
 parser.add_argument('--iter', default=50000, type=int, help='maximum iterations')    # 5000
 parser.add_argument(
-    '--code', default=128, type=int, help='size of code to input generator'    # 256？什么意思
+    '--code', default=224, type=int, help='size of code to input generator'    # 256？什么意思
 )
 parser.add_argument(
     '--lr_g', default=1e-4, type=float, help='learning rate of generator'
@@ -43,7 +43,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 transform = transforms.Compose(
     [
-        transforms.Resize((128,128)),    # 256
+        transforms.Resize((224,224)),    # 256
         # transforms.CenterCrop(128),   # 注释
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
@@ -76,14 +76,15 @@ def sample_data(path, batch_size):
 
 def train(args, n_class, generator, discriminator):
     # dataset = iter(sample_data(config['server_path']+'sagan-pytorch/data/', args.batch))
-    dataset = iter(sample_data(config['server_path']+config['dataset'], args.batch))
+    dataset = iter(sample_data(config['dataset'], args.batch))
     pbar = tqdm(range(args.iter), dynamic_ncols=True)
 
     requires_grad(generator, False)
     requires_grad(discriminator, True)
 
-    preset_code = torch.randn(n_class * 5, args.code).to(device)  # n_class类别 (5,128)
-    # 5是人为设计每个类输出5个样本查看？
+    # ？
+    preset_code = torch.randn(n_class * sample_num , args.code).to(device)  # n_class类别数量
+    # 每个类输出sample_num个样本查看？
 
     disc_loss_val = 0
     gen_loss_val = 0
@@ -91,8 +92,8 @@ def train(args, n_class, generator, discriminator):
     for i in pbar:
         discriminator.zero_grad()
         real_image, label = next(dataset)
-        b_size = real_image.size(0)
-        real_image = real_image.to(device)
+        b_size = real_image.size(0)  # batch_size
+        real_image = real_image.to(device)   # [batch_size,3,code,code]
         fake_image = generator(
             torch.randn(b_size, args.code).to(device), label.to(device)
         )
@@ -125,12 +126,16 @@ def train(args, n_class, generator, discriminator):
 
         if (i + 1) % 100 == 0:
             generator.train(False)
-            input_class = torch.arange(n_class).long().repeat(5).to(device)
+            # [n_class*sample_num]
+            input_class = torch.arange(n_class).long().repeat(sample_num).to(device)  
+            # preset_code: [n_class*sample_num,code], input_class: [n_class*sample_num]
+            # fake_image: [n_class*sample_num,3,code,code]
             fake_image = generator(preset_code, input_class)
             generator.train(True)
+            # 图片排列存储：行数n_class
             utils.save_image(
                 fake_image.cpu().data,
-                config['server_path']+f'sample/{str(i + 1).zfill(7)}.png',
+                config['save']+f'sample/{str(i + 1).zfill(7)}.png',
                 nrow=n_class,
                 normalize=True,
                 range=(-1, 1),
@@ -151,8 +156,10 @@ def train(args, n_class, generator, discriminator):
 if __name__ == '__main__':
     args = parser.parse_args()
     print(args)
-
-    n_class = len(glob.glob(os.path.join(config['server_path']+'sagan-pytorch/data/', '*/')))
+    sample_num=config['sample_num']
+    
+    # 类别数
+    n_class = len(glob.glob(os.path.join(config['dataset'], '*/')))
 
     if args.model == 'sagan':
         from model import Generator, Discriminator
