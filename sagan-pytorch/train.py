@@ -135,7 +135,7 @@ def train(args, n_class, generator, discriminator):
             # 图片排列存储：行数n_class
             utils.save_image(
                 fake_image.cpu().data,
-                config['save']+f'sample/{str(i + 1).zfill(7)}.png',
+                config['server_path']+f'sample/{str(i + 1).zfill(7)}.png',
                 nrow=n_class,
                 normalize=True,
                 range=(-1, 1),

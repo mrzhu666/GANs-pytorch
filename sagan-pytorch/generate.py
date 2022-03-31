@@ -15,6 +15,7 @@ from setting import config
 
 # 利用训练好的生成器生成数据
 
+
 if torch.cuda.is_available():
     torch.cuda.set_device(1)
 parser = argparse.ArgumentParser(description='Self-Attention GAN trainer')
@@ -76,7 +77,8 @@ def generate(args, n_class, generator, path, dataset):
         if not os.path.exists(os.path.join(config['save'],'train',fold)):
             os.makedirs(os.path.join(config['save'],'train',fold))
         
-        # 图片排列存储：行数n_class
+        # 图片排列存储：nrow行数n_class。
+        # 一张图片存储多行多列
         for j in range(N):
             utils.save_image(
                 fake_image[j].cpu().data,
@@ -95,7 +97,6 @@ if __name__ == '__main__':
     print(args)
     sample_num=config['sample_num']
     model_path=os.path.join(config['server_path'],'sagan-pytorch/checkpoint','generator_0050000.pth')
-    # model_path=os.path.join(config['server_path'],'sagan-pytorch','generator_0050000.pth')
     # 类别数
     n_class = len(glob.glob(os.path.join(config['dataset'], '*/')))
 
