@@ -4,6 +4,8 @@ import glob
 import os
 from PIL import Image
 
+import shutil
+
 import argparse
 
 import torch
@@ -15,14 +17,11 @@ from setting import config
 
 # 利用训练好的生成器生成数据
 
-
-if torch.cuda.is_available():
-    torch.cuda.set_device(1)
 parser = argparse.ArgumentParser(description='Self-Attention GAN trainer')
 parser.add_argument('--batch', default=4, type=int, help='batch size')   # 8
 parser.add_argument('--iter', default=50000, type=int, help='maximum iterations')    # 5000
 parser.add_argument(
-    '--code', default=224, type=int, help='size of code to input generator'    # 256？什么意思
+    '--code', default=128, type=int, help='size of code to input generator'    # 256？什么意思
 )
 parser.add_argument(
     '--lr_g', default=1e-4, type=float, help='learning rate of generator'
@@ -47,8 +46,9 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 transform = transforms.Compose(
     [
-        transforms.Resize((224,224)),    # 256
+        transforms.Resize(128),    # 256
         # transforms.CenterCrop(128),   # 注释
+        transforms.CenterCrop(128),   # 注释
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
@@ -58,30 +58,32 @@ transform = transforms.Compose(
 
 
 def generate(args, n_class, generator, path, dataset):
-    # dataset = iter(sample_data(config['server_path']+'sagan-pytorch/data/', args.batch))
-
+    if os.path.exists(config['save']):
+        shutil.rmtree(config['save'])
+        os.makedirs(config['save'])
 
     generator.load_state_dict(torch.load(path))
     generator.train(False)
 
     for i in tqdm(range(n_class)):
-        preset_code = torch.randn(N, args.code).to(device)  # n_class类别数量
-        # [N]
-        input_class = torch.arange(i,i+1).long().repeat(N).to(device)  
-        # preset_code: [N,code], input_class: [N]
-        # fake_image: [N,3,code,code]
-        fake_image = generator(preset_code, input_class)
-
         # 类名
         fold=dataset.classes[i]
         if not os.path.exists(os.path.join(config['save'],'train',fold)):
             os.makedirs(os.path.join(config['save'],'train',fold))
-        
-        # 图片排列存储：nrow行数n_class。
-        # 一张图片存储多行多列
+
         for j in range(N):
+            preset_code = torch.randn(1, args.code).to(device)  # n_class类别数量
+            # [N]
+            input_class = torch.arange(i,i+1).long().repeat(1).to(device)  
+            # preset_code: [N,code], input_class: [N]
+            # fake_image: [N,3,code,code]
+            fake_image = generator(preset_code, input_class)
+            
+            # 图片排列存储：nrow行数n_class。
+            # 一张图片存储多行多列
+            
             utils.save_image(
-                fake_image[j].cpu().data,
+                fake_image[0].cpu().data,
                 os.path.join(config['save'],'train',fold,f'{str(j + 1).zfill(7)}.png'),
                 # nrow=n_class,
                 normalize=True,
@@ -91,17 +93,19 @@ def generate(args, n_class, generator, path, dataset):
 
 if __name__ == '__main__':
     # 每一个类生成的样本数
-    N=100
+    N=1000
     dataset = datasets.ImageFolder(config['dataset'], transform=transform)
     args = parser.parse_args()
     print(args)
     sample_num=config['sample_num']
-    model_path=os.path.join(config['server_path'],'sagan-pytorch/checkpoint','generator_0050000.pth')
+    model_path=os.path.join(config['server_path'],'sagan-pytorch/checkpoint','generator_0020000.pth')
+
+
     # 类别数
     n_class = len(glob.glob(os.path.join(config['dataset'], '*/')))
 
     if args.model == 'sagan':
-        from model import Generator
+        from model_sagan import Generator
     if args.model == 'dcgan':
         from model2 import Generator
     elif args.model == 'resnet':

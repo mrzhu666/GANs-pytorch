@@ -2,18 +2,20 @@
 user:
   mrzhu:
     server_path: /home/mrzhu/data/
-    dataset: /home/mrzhu/data/CRC-HE/NCT-CRC-HE-100K/
+    dataset: /home/mrzhu/data/CRC-HE-100K-PNG/
+    save: /home/mrzhu/data/CRC-HE-GAN/
   student:
-    # sagan-pytorch模型保存地址
+    # sagan-pytorch文件夹，模型保存地址
     # sample文件夹，train.py训练过程保存的文件夹
     server_path: /home/student/mrzhu/data/
-    # 数据集
-    # 文件夹里的每一个文件夹代表一个类
-    dataset: /home/student/mrzhu/data/CRC-HE/train/ 
+    # 训练集数据集
+    # 文件夹里每一个文件夹代表一个类
+    # dataset: /home/student/mrzhu/data/CRC-HE/train/ 
+    dataset: /home/student/mrzhu/data/NCT-CRC-HE-100K-PNG/ 
     # 数据生成保存
     # generate.py 生成图片保存到子文件夹train中，train下面有多个文件夹，每个文件夹一个类
     save: /home/student/mrzhu/data/CRC-HE-GAN/
 
-
-
+    
+# 训练过程中，每一类生成的观测样本数
 sample_num: 5

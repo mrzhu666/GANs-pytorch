@@ -183,7 +183,8 @@ class Generator(nn.Module):
         self.lin_code = spectral_init(nn.Linear(code_dim, 4 * 4 * 512))
         self.conv = nn.ModuleList([ConvBlock(512, 512, n_class=n_class),
                                    ConvBlock(512, 512, n_class=n_class),
-                                   ConvBlock(512, 512, n_class=n_class, deform=True, upsample=False, convolution=False),
+                                   ConvBlock(512, 512, n_class=n_class, 
+                                   deform=True, upsample=False, convolution=False),
                                    ConvBlock(512, 512, n_class=n_class,
                                              self_attention=True),
                                    ConvBlock(512, 256, n_class=n_class),

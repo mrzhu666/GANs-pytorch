@@ -28,7 +28,6 @@ class SpectralNorm:
         weight = getattr(module, self.name + '_orig')
         u = getattr(module, self.name + '_u')
         size = weight.size()
-        # print(size)
         weight_mat = weight.contiguous().view(size[0], -1)
         with torch.no_grad():
             v = weight_mat.t() @ u

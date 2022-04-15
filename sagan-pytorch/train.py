@@ -15,10 +15,10 @@ from setting import config
 # if torch.cuda.is_available():
 #     torch.cuda.set_device(0)
 parser = argparse.ArgumentParser(description='Self-Attention GAN trainer')
-parser.add_argument('--batch', default=4, type=int, help='batch size')   # 8
-parser.add_argument('--iter', default=50000, type=int, help='maximum iterations')    # 5000
+parser.add_argument('--batch', default=8, type=int, help='batch size')   # 8
+parser.add_argument('--iter', default=20000, type=int, help='maximum iterations')    # 5000
 parser.add_argument(
-    '--code', default=224, type=int, help='size of code to input generator'    # 256？什么意思
+    '--code', default=128, type=int, help='size of code to input generator'    # 256？什么意思
 )
 parser.add_argument(
     '--lr_g', default=1e-4, type=float, help='learning rate of generator'
@@ -35,7 +35,6 @@ parser.add_argument(
 parser.add_argument(
     '--model', default='sagan', choices=['sagan', 'resnet'], help='choice model class'   # dcgan
 )
-parser.add_argument('--path', default='./data', type=str, help='Path to image directory')
 
 # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -43,8 +42,9 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 transform = transforms.Compose(
     [
-        transforms.Resize((224,224)),    # 256
+        transforms.Resize(128),    # 256
         # transforms.CenterCrop(128),   # 注释
+        transforms.CenterCrop(128),   # 注释
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
@@ -75,6 +75,13 @@ def sample_data(path, batch_size):
 
 
 def train(args, n_class, generator, discriminator):
+
+    # 新建文件夹
+    if not os.path.exists(os.path.join(config['server_path'],'sagan-pytorch')):
+        os.makedirs(os.path.join(config['server_path'],'sagan-pytorch'))
+    if not os.path.exists(os.path.join(config['server_path'],'sample')):
+        os.makedirs(os.path.join(config['server_path'],'sample'))
+
     # dataset = iter(sample_data(config['server_path']+'sagan-pytorch/data/', args.batch))
     dataset = iter(sample_data(config['dataset'], args.batch))
     pbar = tqdm(range(args.iter), dynamic_ncols=True)
@@ -82,7 +89,7 @@ def train(args, n_class, generator, discriminator):
     requires_grad(generator, False)
     requires_grad(discriminator, True)
 
-    # ？
+    # 该code用于
     preset_code = torch.randn(n_class * sample_num , args.code).to(device)  # n_class类别数量
     # 每个类输出sample_num个样本查看？
 
@@ -106,7 +113,7 @@ def train(args, n_class, generator, discriminator):
         loss.backward()
         d_optimizer.step()
 
-        if (i + 1) % args.n_d == 0:
+        if (i + 1) % args.n_d == 0:  
             generator.zero_grad()
             requires_grad(generator, True)
             requires_grad(discriminator, False)
@@ -162,7 +169,7 @@ if __name__ == '__main__':
     n_class = len(glob.glob(os.path.join(config['dataset'], '*/')))
 
     if args.model == 'sagan':
-        from model import Generator, Discriminator
+        from model_sagan import Generator, Discriminator
     if args.model == 'dcgan':
         from model2 import Generator, Discriminator
     elif args.model == 'resnet':
